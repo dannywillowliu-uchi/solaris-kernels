@@ -156,4 +156,3 @@ that with an adapter around the live JAX/KV Craft rollout state:
 - Add packet loss handling, late action policy, and resync snapshots.
 - Wire the Metal decoder output to a window/display path instead of timing-only logging.
 - Add latent-stream fragmentation or switch to TCP/QUIC if full-size grids are required.
-

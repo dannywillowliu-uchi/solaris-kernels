@@ -323,4 +323,3 @@ def run_laptop_bridge(
 			decoder_sock.sendto(latent.payload, decoder_addr)
 
 		time.sleep(0.001)
-

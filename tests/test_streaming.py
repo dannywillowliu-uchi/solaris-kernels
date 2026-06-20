@@ -97,4 +97,3 @@ def test_local_action_json_to_packet():
 
 def test_protocol_magics_are_distinct():
 	assert ACTION_MAGIC != LATENT_MAGIC
-

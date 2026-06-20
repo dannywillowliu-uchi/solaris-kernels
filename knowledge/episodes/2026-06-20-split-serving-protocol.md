@@ -46,4 +46,3 @@ next_latent(player_id) -> raw_f16_nhwtc_bytes
 
 This keeps the networking and laptop decoder path independent from the details of the B300 model
 runtime.
-
