@@ -1,10 +1,31 @@
-# Oasis H100 Port Forge
+# WM Serving Kernels — Solaris
 
-Autonomous **port-and-optimize** loop: take the world-model serving kernels written
-for B300 (Blackwell, sm_100, FP16) and port + optimize them for the per-user serving
-target H100/H200 (Hopper, sm_90). Modeled on `../amd-kernel-forge` (worst-shape-first
-agent loop + accumulated knowledge), but the problem is **cross-architecture port**,
-not greenfield kernel authoring.
+GPU kernel optimization for **real-time multiplayer world-model serving**. Current target:
+**Solaris** (open JAX multiplayer Minecraft WM — github.com/solaris-wm/solaris) — make its
+per-step inference stream fast on **B300 (sm_100)** and **H100 (sm_90)**.
+
+## Scope (collaboration)
+
+- **This repo / us: the KERNELS.** Profile the model's hot kernels (multiplayer joint attention,
+  per-player FFN/attn, VAE decode, AdaLN, RoPE) and optimize them for fast streaming on B300/H100.
+  JAX-native: XLA cuDNN-FMHA, Pallas-GPU kernels, JAX FFI to FA3/CUTLASS.
+- **Collaborators: the interactive harness + network/systems design** (real-time playable loop,
+  multiplayer netcode, resync, cross-player KV sharing).
+
+## Status (2026-06-20)
+
+Harness + profiler workflow built and the cross-SM port mechanics proven on PyTorch synthetic
+kernels (a methodology demo). **Pivoted to Solaris (JAX);** bringing it up on the B300 to profile
+real shapes, then kernel opt moves to JAX-native. Live state: `knowledge/loop_state.md`. Findings:
+`knowledge/episodes/`.
+
+---
+
+### Legacy framing (being re-targeted to Solaris)
+
+Originally an autonomous **port-and-optimize** loop for B300 (sm_100) → H100/H200 (sm_90),
+modeled on `amd-kernel-forge`. The harness, two-tier gate, ledger, roofline calc, and profiler
+(`prof.py`) all carry over; the kernel *implementation* moves from Triton to JAX/Pallas.
 
 ## Why this exists
 
