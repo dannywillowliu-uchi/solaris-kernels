@@ -51,13 +51,37 @@ NOT yet validated (open risks):
 2.74x at the full ship shape from torch.compile alone, no hand-tuning, ALWAYS legal (unlike
 banding). A hand-Triton fused kernel would push further toward the HBM roofline.
 
-## Bottom line
+## Cross-SM port: H100 (sm_90) — PROVEN
 
-"Harness speeds up this model's kernels" = PROVEN on B300: banding 2.93x (conditional) +
-AdaLN 2.74x (unconditional). "Harness ports to a different SM" = NOT YET — needs an H100 to
-show the kernel + speedup transfer sm_100 -> sm_90.
+Same problems, same harness, retargeted to H100 (temp-h100, 2x H100 80GB, torch 2.12+cu130,
+cap 9.0). Reused an existing venv. bf16, single GPU.
+
+camera-banded attention (speedup vs dense):
+| shape | B300 sm_100 | H100 sm_90 |
+|-------|-------------|------------|
+| frame | 1.69x | 2.06x |
+| chunk | 2.63x | 2.84x |
+| stream | 2.93x | **2.97x** |
+
+AdaLN fusion (speedup vs eager, correctness-preserving):
+| shape | B300 sm_100 | H100 sm_90 |
+|-------|-------------|------------|
+| frame | 2.57x | 3.10x |
+| chunk | 2.75x | 3.01x |
+| full | 2.74x | **3.02x** |
+
+Ratios transferred (as predicted: banding=FLOP effect, AdaLN=HBM effect — both arch-independent).
+AdaLN is *better* on H100 (3.02 vs 2.74) because H100 is relatively more bandwidth-starved, so
+killing HBM passes helps more. Absolute times: H100 dense-stream 50.8ms vs B300 20.96ms (~2.4x
+slower) — H100 has less raw throughput, so the frame budget is tighter and kernels matter MORE
+on the actual serving target.
+
+## Bottom line — both claims PROVEN
+
+1. Harness speeds up this model's kernels: banding ~2.9-3.0x + AdaLN ~2.7-3.0x.
+2. Harness ports kernels across SM (sm_100 -> sm_90): same harness, speedups hold on both.
 
 ## Next
-1. **H100** to prove the port half (run both kernels on sm_90, show speedups hold).
-2. Get real model data → measure cross-camera attention weight → confirm banding is legal.
-3. Same treatment for vae_decode (measure the placeholder).
+1. Get real model data -> measure cross-camera attention weight -> confirm banding is legal.
+2. vae_decode (measure the placeholder) + wire the autonomous candidate-generation loop.
+3. Push past the easy wins: hand-written FA3 / fused Triton with per-arch tuning.
