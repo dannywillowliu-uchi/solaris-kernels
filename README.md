@@ -19,6 +19,11 @@ kernels (a methodology demo). **Pivoted to Solaris (JAX);** bringing it up on th
 real shapes, then kernel opt moves to JAX-native. Live state: `knowledge/loop_state.md`. Findings:
 `knowledge/episodes/`.
 
+Client-side edge work is now tracked separately under `edge/`: `edge/solaris-vae-metal-decoder/`
+is a native macOS Swift/Metal Solaris VAE decoder for the split-serving path where the server
+streams latents and the Mac decodes RGB locally. See
+`edge/solaris-vae-metal-decoder/Docs/EDGE_INFERENCE_OPTIMIZATIONS.md`.
+
 ---
 
 ### Legacy framing (being re-targeted to Solaris)
@@ -130,6 +135,8 @@ problems/<kernel>/
 harvest/
   hooks.py                  # call-site instrumentation -> golden dumps  (STUB until rollout exists)
   README.md
+edge/
+  solaris-vae-metal-decoder/ # macOS Swift/Metal client-side Solaris VAE decoder
 src/oasis_forge/
   config.py                # sm_90 Hopper hardware config + port config
   ledger.py                # flat JSONL attempt ledger (no DB)
