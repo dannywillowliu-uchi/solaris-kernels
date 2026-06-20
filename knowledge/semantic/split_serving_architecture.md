@@ -17,7 +17,7 @@ decode to each laptop's Apple GPU.
 3. The central server updates the authoritative action timeline and generates the next latent chunk.
 4. The central server sends framed latent packets back to each laptop.
 5. The laptop bridge validates the frame header and forwards only the raw NHWTC f16 latent payload
-   to the local `solaris-vae-metal` decoder UDP port.
+   to the local `kvcraft-vae-metal` decoder UDP port.
 6. The local decoder keeps its causal VAE caches warm and decodes RGB frames on the Mac GPU.
 
 ## Current Wire Protocol
@@ -116,7 +116,7 @@ Laptop side, decoder:
 ```bash
 cd edge/kvcraft-vae-metal-decoder
 swift build -c release
-.build/release/solaris-vae-metal --weights /path/to/solaris-vae-decoder-f16 \
+.build/release/kvcraft-vae-metal --weights /path/to/kvcraft-vae-decoder-f16 \
   --udp-port 7777 --latent-height 28 --latent-width 50
 ```
 
