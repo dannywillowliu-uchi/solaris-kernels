@@ -53,3 +53,8 @@ and accumulate gains over time. Scope = KERNELS only (collaborators own the harn
 ssh to the B300 (`root@95.133.253.31`), `harness/profile_solaris.sh`, `harness/measure_solaris.sh`,
 edit the Solaris repo on the box (`/mnt/SFS-nc15dnf9/oasis-port/solaris-run/solaris`) or set XLA
 flags, `results/gains.csv` (ledger -> the over-time chart via `results/plot_gains.py`).
+
+## SCORING (corrected 2026-06-20) — score the SERVER objective, not a proxy
+- Server produces LATENTS only; **VAE decode is CLIENT-side**. SCORE = **DiT latent-gen kernel time** (GEMM/attention/fusion), **EXCLUDING the conv (VAE) kernels**, from the nsys table. NOT full-pipeline fps.
+- A patch that only speeds the conv (VAE) is a CLIENT win, ~0 server value — do not count it.
+- Profile split observed: VAE conv ~82% GPU, DiT latent-gen ~18%. Optimize the DiT 18%.
