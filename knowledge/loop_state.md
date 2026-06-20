@@ -43,3 +43,10 @@ gains are NOT bubble-popping — they're better kernels (FA3/FP8) or new kernels
 ## Log (append each experiment)
 - 02:35 baseline recorded; profiler wired; attn/adaln confirmed bubble-free at real shapes.
 - 02:40 ncu: attn SDPA 74.8% SM (compute-bound) -> FA3 only ~10-20%. adaln ~78% HBM peak. Easy wins near ceiling; pivot to NEW kernels (FFN-FP8, VAE) + FP8 lever.
+- 03:10 ARCHITECTURE CORRECTION: real model = CS2 4-POV JOINT, views CHANNEL-CONCAT (4x16=64ch)
+  over a SINGLE spatial grid (NOT 3-cam spatial tiling). => camera/view-BANDING DOES NOT APPLY
+  (no per-view token separation; every token carries all views in channels). PARK banding work.
+  All synthetic shapes (attn seq len, adaln, vae) are now SUSPECT — pending real serving config
+  from model author (prompt sent). Keep arch-AGNOSTIC kernels running (FFN-FP8, VAE conv3d,
+  adaln-Triton) but treat shapes as provisional; recompute once real config lands.
+  Real conditioning: AdaLN adaln_embed_dim=32 (4 players x 8 actions), patch-embed in_channels=64.
