@@ -31,7 +31,29 @@ Key finding: both easy wins are ALREADY bubble-free / near-roofline at the real 
 Launch-bubbles only exist at small shapes (attn frame 80% busy) which matter least. So further
 gains are NOT bubble-popping — they're better kernels (FA3/FP8) or new kernels.
 
-## Backlog (profiler-reprioritized, highest headroom first)
+## MAJOR PIVOT (03:30) — real target is SOLARIS (open JAX model)
+
+Target model is now **Solaris** (github.com/solaris-wm/solaris, HF nyu-visionx/solaris) — a
+multiplayer Minecraft world model, DiT on MatrixGame 2.0, **JAX implementation** (not PyTorch),
+Self-Forcing distilled (few-step AR), rolling KV cache 6 latent frames, multiplayer joint
+self-attention (players concatenated in tokens), per-player FFN/cross-attn, frozen MatrixGame VAE.
+Runs on GPU via XLA-CUDA (README supports GPU inference, >=48GB).
+
+CONSEQUENCES:
+- The PyTorch synthetic kernels (attn/adaln/ffn) were a METHODOLOGY DEMO; do NOT keep grinding them.
+- Kernel optimization is now JAX-NATIVE: (1) XLA cuDNN flash-attn flag, (2) Pallas-GPU kernels,
+  (3) JAX FFI to FA3/CUTLASS. Profiling (nsys/ncu) is unchanged and still applies.
+- Splash Attention (their fast kernel) is TPU/Pallas — does NOT port to GPU; XLA falls back. That
+  fallback is the headroom.
+
+CURRENT TASK (overnight): bring Solaris up on B300 (root@95.133.253.31), then profile.
+- Setup running in tmux 'solaris' on B300; env on NFS /mnt/SFS-nc15dnf9/oasis-port/solaris-run.
+- After setup (DONE_SETUP in setup.log): run `CUDA_VISIBLE_DEVICES=0 venv/bin/python src/inference.py
+  experiment_name=solaris device.eval_num_samples=1`; confirm it generates a video; then nsys/ncu
+  profile to find the real GPU hot kernels AND check whether XLA uses cuDNN flash or naive fallback.
+- Next sessions/wakeups: CONTINUE SOLARIS (bring-up -> profile -> JAX kernel opt), not the old FFN task.
+
+## Backlog (profiler-reprioritized, highest headroom first) — SUPERSEDED by Solaris pivot above
 
 1. [DONE] ncu attention SDPA = 74.8% SM throughput (compute-bound). FA3 headroom only ~10-20%, hard source-build. De-prioritized.
 2. [NEXT] NEW: FFN/QKV GEMM problem — FP8 vs bf16 (the real aggressive lever; compute-bound, less drift-prone). Likely more headroom than the already-optimized attn/adaln.
