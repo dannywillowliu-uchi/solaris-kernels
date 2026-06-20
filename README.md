@@ -1,7 +1,7 @@
 # WM Serving Kernels — KV Craft
 
 GPU kernel optimization for **real-time multiplayer world-model serving**. Current target:
-**KV Craft** (open JAX multiplayer Minecraft WM — github.com/solaris-wm/solaris) — make its
+**KV Craft** (open JAX multiplayer Minecraft WM — (base WM repo, internal)) — make its
 per-step inference stream fast on **B300 (sm_100)** and **H100 (sm_90)**.
 
 ## Scope (collaboration)

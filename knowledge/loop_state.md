@@ -33,7 +33,7 @@ gains are NOT bubble-popping — they're better kernels (FA3/FP8) or new kernels
 
 ## MAJOR PIVOT (03:30) — real target is SOLARIS (open JAX model)
 
-Target model is now **KV Craft** (github.com/solaris-wm/solaris, HF nyu-visionx/solaris) — a
+Target model is now **KV Craft** ((base WM repo, internal), HF (internal model repo)) — a
 multiplayer Minecraft world model, DiT on MatrixGame 2.0, **JAX implementation** (not PyTorch),
 Self-Forcing distilled (few-step AR), rolling KV cache 6 latent frames, multiplayer joint
 self-attention (players concatenated in tokens), per-player FFN/cross-attn, frozen MatrixGame VAE.

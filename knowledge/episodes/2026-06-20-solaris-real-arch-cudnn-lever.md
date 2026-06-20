@@ -1,6 +1,6 @@
 # 2026-06-20 — KV Craft real architecture (from open code) + the cuDNN-flash lever
 
-Read the open KV Craft repo (github.com/solaris-wm/solaris). Replaces ALL prior synthetic-shape
+Read the open KV Craft repo ((base WM repo, internal)). Replaces ALL prior synthetic-shape
 guesses with real numbers, and surfaced the #1 GPU kernel lever before running anything.
 
 ## Real architecture (config + src/models/transformer.py)
@@ -8,7 +8,7 @@ guesses with real numbers, and surfaced the #1 GPU kernel lever before running a
 - **DiT backbone:** hidden **1536**, **30 layers**, **12 heads**, **head_dim 128**, ffn **8960**,
   patch_size **[1,2,2]**, qk_norm on. (~1.5-2B params, NOT 14B.)
 - **obs_resolution 360x640**; **880 patches per frame per player**; num_frames_context **33**.
-- **Multiplayer:** `KV CraftMPModel`, `multiplayer_method: concat_c`. Causal **block mask**,
+- **Multiplayer:** `the MP model class`, `multiplayer_method: concat_c`. Causal **block mask**,
   `block_size = spatial_size * num_players` (= 880*2 = 1760 tokens/frame for 2 players). Per-player
   cross-attn/FFN; joint multiplayer self-attention.
 - **Action module:** keyboard_dim_in 23 + mouse_dim_in 2, 16 heads, hidden 128 (separate from DiT).
