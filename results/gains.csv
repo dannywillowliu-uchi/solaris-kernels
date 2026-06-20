@@ -6,3 +6,4 @@ date,target,device,stage,scope,baseline_ms,optimized_ms,speedup,notes
 2026-06-20,solaris,B300,baseline,gen_2player_fps,509.7,509.7,1.00,"1.96 fps (257f/131s) warm-cache; target ~20fps; default XLA attn + Blackwell VAE conv fallback"
 2026-06-20,solaris,B300,cudnn-9.23,gen_2player_fps,509.7,241.2,2.11,"cuDNN 9.10->9.23: VAE 3D conv 38 fallbacks->0; 1.96->4.14 fps; warm-vs-warm; correctness-preserving (algo change)"
 2026-06-20,solaris,B300,SCORING-FIX,note,,,,"SERVER score = DiT latent-gen kernel time (exclude VAE conv). VAE=client-side. cuDNN-9.23 win above was VAE/CLIENT (server DiT-time ~unchanged). Profile split: VAE conv ~82% GPU, DiT latent-gen ~18%."
+2026-06-20,solaris,B300,baseline-DiT,latentgen_gpu_ms,4671,4671,1.00,"CORRECT server baseline: DiT latent-gen 4671ms (17%) over capture ~34ms/frame ~29fps GPU-bound. VAE 83%=client. Top DiT kernel=XLA attention (gemm_fusion_dot+fusion)."
