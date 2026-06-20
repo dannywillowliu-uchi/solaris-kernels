@@ -25,30 +25,38 @@ Verified by reading the cloned source (`dit.py`, `attention.py`, `vae.py`, `gene
 - **Sampler: DDIM, default 10 steps**, v-prediction, Diffusion-Forcing per-frame noise.
   **No DMD / distillation / few-step path exists in the open repo.**
 
-## Ship: internal 14B Wan2.1-style, DMD-distilled  (Wan-AI/Wan2.1-T2V-14B family)
+## Ship: internal OASIS DMD driving model — 14B Wan2.1-style, DMD-distilled
 
-Cited from the Wan2.1 report/repo/config and the DMD2 / CausVid / Self-Forcing papers.
+THE actual ship target (operator-provided config). A multi-camera driving world model being
+repurposed as the per-user multiplayer realtime renderer. Generic Wan2.1-14B numbers below are
+cited; the OASIS-specific overrides are operator-provided and take precedence.
 
-- **DiT (dense, no MoE)**: dim **5120**, **40 layers**, **40 heads**, **head_dim 128**, FFN
-  **13824** (GELU), patch **(1,2,2)**, **full 3D self-attention** (all T·H·W tokens attend
-  jointly — NOT axial), plus umT5-XXL text cross-attention per block.
-- **Token counts** (81 frames): ~**33k** @480p, ~**76k** @720p (inferred, corroborated by
-  third-party Wan profiling). Crossover where attention FLOPs > FFN FLOPs is n > ~4d ≈ 20.5k —
-  both resolutions are well past it, so per-step attention dominates FFN ~3-4×.
-- **Wan-VAE: 3D CAUSAL CONV**, 16 latent ch, **8× spatial / 4× temporal** downsample. (All 4×
-  temporal compression is the VAE's — patch time-stride is 1.)
-- **DMD2-style 4-step iterative** sampling (predict-x̂₀ then re-noise), schedule ~[999,749,499,249]
-  (CausVid video variant [999,748,502,247]; Self-Forcing [1000,750,500,250]). No teacher / no CFG /
-  no critic at inference.
-- **Streaming = block-causal**: bidirectional within a 3-5-frame chunk, causal across chunks.
-  KV computed ONCE per chunk at the clean pass, reused across all 4 denoising steps. Rolling
-  window (attention-sink + recent ~7-21 frames). Wan-14B KV ≈ 26-27 GB at a 21-frame window.
+- **Implementation class: `WanTransformer3DModel` (HF diffusers).** => call sites for harvest live
+  in diffusers' `modeling_wan` (WanAttnProcessor / WanTransformerBlock), NOT the original Wan repo.
+  The serving stack is a diffusers-based fork. Scheduler is **FlowMatch + DMD few-step**.
+- **DiT (dense, no MoE)**: dim **5120**, **40 layers**, **40 heads**, **head_dim 128**, FFN ~13824,
+  patch **[1,2,2]**, **full 3D self-attention**. AdaLN/action conditioning, **action dim 10**
+  (driving controls — NOT 25; the 500M's 25 is Minecraft).
+- **3-CAMERA geometry (drives the token + attention shape):** RGB **512×2304** = 3 cameras tiled
+  horizontally (left|front|right), each 512×768. VAE: 16 latent ch, ~8× spatial / ~4× temporal.
+  Latent spatial **64×288** (288 = 3×96, one ~96-wide block per camera). Per 32-frame chunk:
+  latent T≈8; tokens/latent-timestep = 32×144 = **4608**; **total ≈ 36,864 video tokens**. One
+  latent frame ≈ 590 KB bf16; a full chunk latent ≈ 4.5 MB bf16.
+- **DMD 4-step**, FlowMatch sigmas **[1, 0.9375, 0.8333, 0.625, 0]** (5 sigmas = 4 steps), iterative
+  (denoise→re-noise). No teacher / CFG / critic at inference.
+- **Streaming = block-causal**: bidirectional within a chunk, causal across chunks. KV computed ONCE
+  per chunk at the clean pass, reused across all 4 denoising steps. Rolling window (sink + recent).
+- **PROJECT-SPECIFIC KERNEL LEVER:** the spatial token grid (64×288) is **3 weakly-coupled camera
+  blocks** (96 cols each). Left/front/right share little content, so cross-camera spatial attention
+  is a candidate for a **block-sparse / camera-banded mask** — a targeted FLOP cut that falls
+  directly out of the 3-camera tiling and is invisible to a generic dense attention port. Verify the
+  cross-camera attention weight is actually low before pruning; if so, this is a high-value kernel.
 
 ## Divergence table (prototype vs ship) — what transfers and what does NOT
 
 | Kernel | Open-Oasis 500M | 14B Wan ship | Transfers? |
 |--------|-----------------|--------------|------------|
-| Attention math | **axial** (s+t separate), SDPA, **head_dim 64**, ≤144 keys | **full 3D**, **head_dim 128**, ~33-76k keys | **NO — different in kind.** 500M proves the harness, not the attention kernel. |
+| Attention math | **axial** (s+t separate), SDPA, **head_dim 64**, ≤144 keys | **full 3D**, **head_dim 128**, **~36,864 keys** (3-cam, banded?) | **NO — different in kind.** 500M proves the harness, not the attention kernel. |
 | AdaLN | SiLU+Linear→6·hidden, additive cond | same shape, larger hidden | **YES — same op, just wider.** Best transfer target. |
 | VAE decode | **ViT transformer** (SDPA blocks) | **3D causal conv** (Wan-VAE) | **NO — different in kind.** ViT-VAE port ≠ conv3d port. |
 | Sampler | DDIM 10-step | DMD 4-step iterative | harness only |

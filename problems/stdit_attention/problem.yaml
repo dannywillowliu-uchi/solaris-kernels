@@ -16,13 +16,20 @@ default_tier: structural   # keep attention FP16/BF16 — FP8 attention drift co
 shapes_status: pending_harvest
 shape_priors: |
   500M: s_attn 144 keys x (B*T); t_attn <=32 keys x (B*144); head_dim 64; 16 heads; 16 blocks.
-  14B:  full-3D ~33-76k tokens; head_dim 128; 40 heads; 40 blocks; block-causal + KV cache.
-  Capture an early-sigma and a late-sigma step.
+  Ship (OASIS DMD driving): full-3D ~36,864 tokens (latent T~8 x 4608/timestep); head_dim 128;
+  40 heads; 40 blocks; WanTransformer3DModel (diffusers); block-causal + KV-per-chunk. Spatial grid
+  64x288 = 3 camera blocks of 96 cols (left|front|right). Capture early + late sigma.
 
 tooling: |
   Hopper: cuDNN-SDPA (seqlen<=2k) / FA3 (>2k, hopper/ source build) for dense; varlen+cu_seqlens
   for per-frame spatial block-diagonal; FlexAttention+FA4 for block-causal-in-time; STA/SVG for
   full-3D sparsity (1.6-10x over dense FA3). Do NOT feed a dense structured mask to bare FA3.
+
+camera_banded_lever: |
+  PROJECT-SPECIFIC: the 3 horizontally-tiled cameras (96-col blocks in the 64x288 spatial grid)
+  share little content. If measured cross-camera spatial attention weight is low, mask it to a
+  camera-banded / block-diagonal pattern (FlexAttention mask_mod over the camera axis) for a large
+  FLOP cut a generic dense port can't see. VERIFY low cross-camera weight on real golden first.
 
 scoring: |
   Kept iff: tier-1 allclose vs golden (structural tol) AND target_us < reference_us AND tier-2
