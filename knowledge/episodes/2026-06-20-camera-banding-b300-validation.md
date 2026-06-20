@@ -36,7 +36,28 @@ NOT yet validated (open risks):
 - **Headroom past naive.** A fused varlen / FlexAttention block-diagonal kernel could claw back
   the small-shape launch overhead and the last ~0.07x to 3.0x; modest vs the structural win.
 
+## AdaLN fusion — the correctness-preserving win (no banding caveat)
+
+`problems/adaln_modulation`: eager AdaLN chain (LN -> modulate -> gated residual, x2) vs
+`torch.compile` candidate. Same math, fused HBM passes. B300, bf16:
+
+| shape | S × D | correct | eager | fused | speedup |
+|-------|-------|---------|-------|-------|---------|
+| frame | 4,608 × 5120 | exact* | 0.439 ms | 0.171 ms | 2.57x |
+| chunk | 13,824 × 5120 | exact* | 1.319 ms | 0.479 ms | 2.75x |
+| full | 36,864 × 5120 | exact* | 3.402 ms | 1.243 ms | 2.74x |
+
+*max_err ~6e-2 = bf16 rounding (compiled uses different reduction order); allclose passes.
+2.74x at the full ship shape from torch.compile alone, no hand-tuning, ALWAYS legal (unlike
+banding). A hand-Triton fused kernel would push further toward the HBM roofline.
+
+## Bottom line
+
+"Harness speeds up this model's kernels" = PROVEN on B300: banding 2.93x (conditional) +
+AdaLN 2.74x (unconditional). "Harness ports to a different SM" = NOT YET — needs an H100 to
+show the kernel + speedup transfer sm_100 -> sm_90.
+
 ## Next
-1. Get real model data on a box → measure cross-camera attention weight → confirm banding is legal.
-2. H100 to confirm the ratio on the port target.
-3. Same treatment for vae_decode (measure the placeholder) + adaln.
+1. **H100** to prove the port half (run both kernels on sm_90, show speedups hold).
+2. Get real model data → measure cross-camera attention weight → confirm banding is legal.
+3. Same treatment for vae_decode (measure the placeholder).
