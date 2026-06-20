@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.build/
+edge/*/.build/
+# harvested golden tensors are large + box-specific; regenerate, don't commit
+problems/*/task_files/golden.npz
+.stop

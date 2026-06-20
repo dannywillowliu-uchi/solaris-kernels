@@ -1,0 +1,48 @@
+[project]
+name = "oasis-h100-port"
+version = "0.1.0"
+description = "Autonomous port-and-optimize loop: world-model kernels B300/sm_100 -> H100/sm_90"
+requires-python = ">=3.11"
+dependencies = [
+	"click>=8.1",
+	"asyncssh>=2.14",
+	"rich>=13.0",
+	"pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Only needed on a GPU box for harvest + local correctness checks.
+harvest = [
+	"torch>=2.4",
+	"numpy>=1.26",
+]
+dev = [
+	"pytest>=8.0",
+	"ruff>=0.4",
+	"mypy>=1.10",
+]
+viz = [
+	"matplotlib>=3.8",
+]
+
+[project.scripts]
+oasis-forge = "oasis_forge.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/oasis_forge"]
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+# Root pytest here so it doesn't inherit a config from a parent directory.
+[tool.pytest.ini_options]
+testpaths = ["tests"]

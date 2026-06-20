@@ -1,0 +1,32 @@
+name: adaln_modulation
+description: |
+  Action-conditioned AdaLN. The conditioning vector c (timestep + additive action embedding)
+  drives SiLU+Linear(hidden, 6*hidden) -> chunk into shift/scale/gate for MSA and MLP, applied
+  around the block's LayerNorm + residual. modulate(x)=x*(1+scale)+shift, gate(x)=g*x.
+  THE BEST TRANSFER TARGET: same op on prototype (hidden 1024) and ship (hidden 5120) — only the
+  width changes. Good first end-to-end run to shake out harvest + the gate.
+
+source_arch: sm_100
+target_arch: sm_90
+default_tier: structural   # HBM-bandwidth-bound; FP8 only halves bytes, no compute win
+
+shapes_status: pending_harvest
+shape_priors: |
+  500M: hidden 1024, 6*1024 modulation, applied across 144 spatial tokens x (B*T); 32 blocks/forward
+        (s + t adaLN). 14B: hidden 5120, 6*5120, across ~33-76k tokens, 40 blocks.
+  Action dim 25 (500M), additive into c. The expensive part is the elementwise apply, not the MLP.
+
+tooling: |
+  Triton fused kernel: residual -> LN(mean+var one pass, FP32 accumulate) -> affine -> (1+scale)*x+shift
+  -> gate -> store, collapsing 6-9 HBM passes to 1 read + 1 write. Template: flash-attn
+  ops/triton/layer_norm.py. Validated 3.2-3.4x. torch.compile gets ~10-15% free (breaks at the MLP GEMM).
+  Apex FusedLayerNorm does NOT fuse modulation.
+
+scoring: |
+  Kept iff: tier-1 allclose vs golden AND target_us < reference_us AND tier-2 drift <= budget.
+  Bandwidth-bound: target the HBM roofline, not FLOPS. H200 ~43% faster than H100 here from BW alone.
+
+interface: |
+  adaln(x, cond) -> x_modulated      # fuse norm + shift/scale/gate + residual
+
+immutable: [golden.npz]

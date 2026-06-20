@@ -1,0 +1,41 @@
+name: vae_decode
+description: |
+  VAE decode latent -> RGB. CO-PRIORITY with attention for the ship model: because the distilled
+  model runs the DiT only ~4x while decode is step-count-independent, VAE decode rises to ~30-40%
+  of END-TO-END latency in the few-step regime (Flash-VAED: 2.3% @50 steps -> 31-41% @4 steps).
+  PROTOTYPE and SHIP differ in kind — see model_facts.md:
+    - 500M prototype: ViT TRANSFORMER VAE (SDPA AttentionBlocks, dec_depth 12, dim 1024). NOT conv3d.
+    - 14B ship: Wan-VAE = 3D CAUSAL CONV, 16ch, 8x spatial / 4x temporal downsample. Compute-bound.
+  So the 500M decode does NOT exercise the conv3d path. For a real conv3d proxy, use Wan-VAE.
+
+source_arch: sm_100
+target_arch: sm_90
+default_tier: structural
+
+shapes_status: pending_harvest
+shape_priors: |
+  500M: per-frame 2D ViT decode, token grid 18x32, latent 16ch, patch 20, scale 1/12.75.
+  14B Wan-VAE: 3D causal conv, latent 16ch, 8x/4x down. Decode runs per output chunk -> lands
+  directly in the fps budget.
+
+tooling: |
+  Ship (conv3d): cuDNN with channels_last_3d (NDHWC) + cudnn.benchmark=True. NDHWC is critical —
+  NCHW inserts transposes that kill Tensor Cores (up to 10-20x swing). Verify TensorOp kernels via
+  Nsight. CUTLASS implicit-GEMM conv3d (stable >=3.6) only if cuDNN leaves >20% on the table.
+  Architectural note (out of scope for the port, flag to model team): depthwise-separable conv3d
+  can beat any kernel work ~5-6x at >93% quality.
+  Prototype (ViT-VAE): same SDPA tooling as attention.
+  Edge client (Apple GPU): see edge/solaris-vae-metal-decoder. The local Mac path uses MPSGraph
+  with cached causal conv3d lowered into temporal conv2d slices, plus a full steady-state graph
+  once decoder caches are warm. Current practical path to 10-15 FPS is smaller even latent grids
+  such as 28x50 plus GPU-resident display upscale.
+
+scoring: |
+  Kept iff: tier-1 allclose vs golden (decoded latent->RGB) AND target_us < reference_us AND tier-2
+  drift <= budget. For tier-2, PERCEPTUAL delta on decoded RGB matters more than latent MSE here —
+  set drift_budget_perceptual if available.
+
+interface: |
+  decode(latent) -> rgb      # shapes/dtype from golden.npz meta
+
+immutable: [golden.npz]
