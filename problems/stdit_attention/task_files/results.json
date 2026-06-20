@@ -1,0 +1,10 @@
+[
+  {
+    "shape": "tiny",
+    "correct": true,
+    "max_err": 0.0,
+    "dense_ms": 0.023833010345697403,
+    "candidate_ms": 0.05954178050160408,
+    "speedup": 0.4002737261955969
+  }
+]
