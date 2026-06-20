@@ -39,3 +39,7 @@ indent-width = 4
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+# Root pytest here so it doesn't inherit a config from a parent directory.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
