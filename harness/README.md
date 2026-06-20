@@ -1,7 +1,7 @@
-# Solaris autokernel harness
+# KV Craft autokernel harness
 
-Autonomous profile → patch → measure → gate → record loop that speeds up Solaris generation on
-the B300 without degrading video quality. Ported from `amd-kernel-forge`, adapted to Solaris/JAX.
+Autonomous profile → patch → measure → gate → record loop that speeds up KV Craft generation on
+the B300 without degrading video quality. Ported from `amd-kernel-forge`, adapted to KV Craft/JAX.
 The gains-over-time chart is the demo artifact; it grows from `results/gains.csv` automatically.
 
 ## Pieces

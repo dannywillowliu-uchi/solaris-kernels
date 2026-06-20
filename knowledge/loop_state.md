@@ -33,7 +33,7 @@ gains are NOT bubble-popping — they're better kernels (FA3/FP8) or new kernels
 
 ## MAJOR PIVOT (03:30) — real target is SOLARIS (open JAX model)
 
-Target model is now **Solaris** (github.com/solaris-wm/solaris, HF nyu-visionx/solaris) — a
+Target model is now **KV Craft** (github.com/solaris-wm/solaris, HF nyu-visionx/solaris) — a
 multiplayer Minecraft world model, DiT on MatrixGame 2.0, **JAX implementation** (not PyTorch),
 Self-Forcing distilled (few-step AR), rolling KV cache 6 latent frames, multiplayer joint
 self-attention (players concatenated in tokens), per-player FFN/cross-attn, frozen MatrixGame VAE.
@@ -46,14 +46,14 @@ CONSEQUENCES:
 - Splash Attention (their fast kernel) is TPU/Pallas — does NOT port to GPU; XLA falls back. That
   fallback is the headroom.
 
-CURRENT TASK (overnight): bring Solaris up on B300 (root@95.133.253.31), then profile.
+CURRENT TASK (overnight): bring KV Craft up on B300 (root@95.133.253.31), then profile.
 - Setup running in tmux 'solaris' on B300; env on NFS /mnt/SFS-nc15dnf9/oasis-port/solaris-run.
 - After setup (DONE_SETUP in setup.log): run `CUDA_VISIBLE_DEVICES=0 venv/bin/python src/inference.py
   experiment_name=solaris device.eval_num_samples=1`; confirm it generates a video; then nsys/ncu
   profile to find the real GPU hot kernels AND check whether XLA uses cuDNN flash or naive fallback.
 - Next sessions/wakeups: CONTINUE SOLARIS (bring-up -> profile -> JAX kernel opt), not the old FFN task.
 
-## Backlog (profiler-reprioritized, highest headroom first) — SUPERSEDED by Solaris pivot above
+## Backlog (profiler-reprioritized, highest headroom first) — SUPERSEDED by KV Craft pivot above
 
 1. [DONE] ncu attention SDPA = 74.8% SM throughput (compute-bound). FA3 headroom only ~10-20%, hard source-build. De-prioritized.
 2. [NEXT] NEW: FFN/QKV GEMM problem — FP8 vs bf16 (the real aggressive lever; compute-bound, less drift-prone). Likely more headroom than the already-optimized attn/adaln.
@@ -72,7 +72,7 @@ CURRENT TASK (overnight): bring Solaris up on B300 (root@95.133.253.31), then pr
   from model author (prompt sent). Keep arch-AGNOSTIC kernels running (FFN-FP8, VAE conv3d,
   adaln-Triton) but treat shapes as provisional; recompute once real config lands.
   Real conditioning: AdaLN adaln_embed_dim=32 (4 players x 8 actions), patch-embed in_channels=64.
-- 19:59 MILESTONE: Solaris generated 2-player video end-to-end on B300 (output/solaris/eval_structure/video_0_side_by_side.mp4). JAX works on Blackwell. First-run ~6min incl conv-autotune compile (not fair fps). Compile cache warm -> doing clean timed re-run for steady-state fps.
+- 19:59 MILESTONE: KV Craft generated 2-player video end-to-end on B300 (output/solaris/eval_structure/video_0_side_by_side.mp4). JAX works on Blackwell. First-run ~6min incl conv-autotune compile (not fair fps). Compile cache warm -> doing clean timed re-run for steady-state fps.
 - 20:03 BASELINE fps measured: 1.96 fps (257 frames 2-player / 131s, warm cache, 0 conv-fallbacks). ~510 ms/frame. Target ~20fps => ~10x gap. Recorded in results/gains.csv. Next: cuDNN-flash attention (lever #1).
 - 20:17 PROFILE (nsys graph-trace): VAE decode 3D conv = ~83% GPU time (implicit_convolveNd_sgemm fallback). Attention MINOR. STRIKE = VAE conv layout/algo on Blackwell. cuDNN-flash deprioritized.
 - 20:28 OPT-ATTEMPT #1 (VAE conv): global XLA --xla_gpu_force_conv_nhwc => 0.72 fps (vs 1.96 baseline) = 2.7x WORSE. REVERTED. Dead-end: forces DiT transposes + Blackwell NDHWC conv still 33 fallbacks. Next VAE-conv candidates: scoped-NDHWC(VAE only) / pinned cuDNN algo / cuDNN bump / Pallas-GPU conv.

@@ -6,7 +6,7 @@ Kernels (cuDNN-9.23 done, FP8 conv ~2×) top out ~7 fps frames-out. The multi-×
 faster decoder. Server (DiT) latents and the client contract are UNCHANGED.
 
 ## Why this is a config+training problem, not a new arch
-Solaris's decoder is `Decoder3d(dim=128, dim_mult=[1,2,4,4], num_res_blocks=2, z_dim=...)`.
+KV Craft's decoder is `Decoder3d(dim=128, dim_mult=[1,2,4,4], num_res_blocks=2, z_dim=...)`.
 The student is the SAME class with a lighter config:
 - `dim` 128 → 64 (half the channels everywhere)
 - `dim_mult` [1,2,4,4] → [1,2,2,2] (cap the high-res channel blowup — the 512-ch stages are the FLOP killers)
@@ -25,11 +25,11 @@ Same `z_dim` and VAE_SCALE → identical latent interface.
   student decode fps (the win). Target: multi-× faster at >~0.97 SSIM vs teacher.
 
 ## Files
-- `student.py`  — light Decoder3d config + builder (reuses Solaris src.models.wan_vae).
+- `student.py`  — light Decoder3d config + builder (reuses KV Craft src.models.wan_vae).
 - `distill.py`  — load teacher, build student, distill on latents, validate quality + speed, save.
 
 ## Status
-Harness written; needs GPU training (load vae.pt teacher + train student). Runs in the Solaris
+Harness written; needs GPU training (load vae.pt teacher + train student). Runs in the KV Craft
 env. This is the real frames-out lever; FP8 conv kernels are the parallel ~2× margin.
 
 ## Drop-in

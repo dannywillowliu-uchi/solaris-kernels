@@ -1,7 +1,7 @@
-# WM Serving Kernels — Solaris
+# WM Serving Kernels — KV Craft
 
 GPU kernel optimization for **real-time multiplayer world-model serving**. Current target:
-**Solaris** (open JAX multiplayer Minecraft WM — github.com/solaris-wm/solaris) — make its
+**KV Craft** (open JAX multiplayer Minecraft WM — github.com/solaris-wm/solaris) — make its
 per-step inference stream fast on **B300 (sm_100)** and **H100 (sm_90)**.
 
 ## Scope (collaboration)
@@ -15,13 +15,13 @@ per-step inference stream fast on **B300 (sm_100)** and **H100 (sm_90)**.
 ## Status (2026-06-20)
 
 Harness + profiler workflow built and the cross-SM port mechanics proven on PyTorch synthetic
-kernels (a methodology demo). **Pivoted to Solaris (JAX);** bringing it up on the B300 to profile
+kernels (a methodology demo). **Pivoted to KV Craft (JAX);** bringing it up on the B300 to profile
 real shapes, then kernel opt moves to JAX-native. Live state: `knowledge/loop_state.md`. Findings:
 `knowledge/episodes/`.
 
 ---
 
-### Legacy framing (being re-targeted to Solaris)
+### Legacy framing (being re-targeted to KV Craft)
 
 Originally an autonomous **port-and-optimize** loop for B300 (sm_100) → H100/H200 (sm_90),
 modeled on `amd-kernel-forge`. The harness, two-tier gate, ledger, roofline calc, and profiler

@@ -1,12 +1,12 @@
-# Solaris Serving Optimization — Summary (for demo)
+# KV Craft Serving Optimization — Summary (for demo)
 
-Goal: make the **Solaris** multiplayer world model stream in real time (**20–30 fps**) on
+Goal: make the **KV Craft** multiplayer world model stream in real time (**20–30 fps**) on
 NVIDIA **Blackwell** (B300 sm_103 + B200 sm_100). We (a) built an **autonomous kernel-optimization
 agent/harness**, (b) used it to profile + optimize the JAX/XLA serving path, and (c) opened a
 **lighter-VAE distillation** track for the remaining gap. This doc is the demo brief.
 
-Repo: `github.com/dannywillowliu-uchi/solaris-kernels` (private).
-Target model: Solaris (JAX, DiT-on-MatrixGame-2.0; DiT = hidden 1536 / 30 layers / 12 heads /
+Repo: `github.com/dannywillowliu-uchi/kv-craft-kernels` (private).
+Target model: KV Craft (JAX, DiT-on-MatrixGame-2.0; DiT = hidden 1536 / 30 layers / 12 heads /
 head_dim 128 / ffn 8960; Self-Forcing few-step; Wan-VAE 3D-conv decoder; 2-player joint attention).
 
 ---

@@ -1,6 +1,6 @@
-# Solaris Kernel-Optimization Agent
+# KV Craft Kernel-Optimization Agent
 
-You autonomously speed up **Solaris** (JAX multiplayer world model) generation on the **B300**
+You autonomously speed up **KV Craft** (JAX multiplayer world model) generation on the **B300**
 (sm_100; later H100 sm_90) **without degrading video quality**. You profile to find the slowest
 GPU kernel, patch it, measure the real fps gain, gate on quality, keep wins / revert regressions,
 and accumulate gains over time. Scope = KERNELS only (collaborators own the harness + netcode).
@@ -51,7 +51,7 @@ and accumulate gains over time. Scope = KERNELS only (collaborators own the harn
 
 ## Tools
 ssh to the B300 (`root@95.133.253.31`), `harness/profile_solaris.sh`, `harness/measure_solaris.sh`,
-edit the Solaris repo on the box (`/mnt/SFS-nc15dnf9/oasis-port/solaris-run/solaris`) or set XLA
+edit the KV Craft repo on the box (`/mnt/SFS-nc15dnf9/oasis-port/solaris-run/solaris`) or set XLA
 flags, `results/gains.csv` (ledger -> the over-time chart via `results/plot_gains.py`).
 
 ## SCORING (corrected 2026-06-20) — score the SERVER objective, not a proxy

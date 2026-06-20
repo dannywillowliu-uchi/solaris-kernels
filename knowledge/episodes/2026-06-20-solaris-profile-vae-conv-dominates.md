@@ -1,6 +1,6 @@
-# 2026-06-20 — Solaris B300 profile: VAE decode conv is ~83% of GPU time (NOT attention)
+# 2026-06-20 — KV Craft B300 profile: VAE decode conv is ~83% of GPU time (NOT attention)
 
-nsys (--cuda-graph-trace=node) over warm Solaris generation on B300. Decisive.
+nsys (--cuda-graph-trace=node) over warm KV Craft generation on B300. Decisive.
 
 ## Top GPU kernels
 | % | kernel | meaning |

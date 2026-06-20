@@ -1,6 +1,6 @@
-# 2026-06-20 — Solaris real architecture (from open code) + the cuDNN-flash lever
+# 2026-06-20 — KV Craft real architecture (from open code) + the cuDNN-flash lever
 
-Read the open Solaris repo (github.com/solaris-wm/solaris). Replaces ALL prior synthetic-shape
+Read the open KV Craft repo (github.com/solaris-wm/solaris). Replaces ALL prior synthetic-shape
 guesses with real numbers, and surfaced the #1 GPU kernel lever before running anything.
 
 ## Real architecture (config + src/models/transformer.py)
@@ -8,7 +8,7 @@ guesses with real numbers, and surfaced the #1 GPU kernel lever before running a
 - **DiT backbone:** hidden **1536**, **30 layers**, **12 heads**, **head_dim 128**, ffn **8960**,
   patch_size **[1,2,2]**, qk_norm on. (~1.5-2B params, NOT 14B.)
 - **obs_resolution 360x640**; **880 patches per frame per player**; num_frames_context **33**.
-- **Multiplayer:** `SolarisMPModel`, `multiplayer_method: concat_c`. Causal **block mask**,
+- **Multiplayer:** `KV CraftMPModel`, `multiplayer_method: concat_c`. Causal **block mask**,
   `block_size = spatial_size * num_players` (= 880*2 = 1760 tokens/frame for 2 players). Per-player
   cross-attn/FFN; joint multiplayer self-attention.
 - **Action module:** keyboard_dim_in 23 + mouse_dim_in 2, 16 heads, hidden 128 (separate from DiT).
@@ -33,7 +33,7 @@ expressible to cuDNN (causal yes; arbitrary block mask may need handling / Palla
 1. Run inference on B300 (GPU 0), confirm it generates a video (validates JAX on Blackwell sm_100).
 2. nsys/ncu profile -> confirm default attention is the bottleneck and how far below cuDNN it is.
 3. Flip GPU attention to `implementation='cudnn'` (single-player path first; handle MP block mask).
-   Measure speedup + numeric match. This is the first real Solaris kernel win.
+   Measure speedup + numeric match. This is the first real KV Craft kernel win.
 4. Then: per-player FFN/attn batching, VAE decode, Pallas-GPU for what cuDNN can't cover.
 
 ## Token-count reality

@@ -1,4 +1,4 @@
-# Solaris B300 bottlenecks (measured 2026-06-20)
+# KV Craft B300 bottlenecks (measured 2026-06-20)
 
 Baseline: 1.96 fps (2-player, warm cache) = ~510 ms/frame. Target ~20 fps (50 ms/frame) => ~10x.
 

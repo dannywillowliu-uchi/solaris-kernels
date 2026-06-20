@@ -1,11 +1,11 @@
-# 2026-06-20 — Solaris first run on B300: JAX works, Blackwell XLA pain points = our targets
+# 2026-06-20 — KV Craft first run on B300: JAX works, Blackwell XLA pain points = our targets
 
 Ran `src/inference.py experiment_name=solaris device.eval_num_samples=1` on B300 GPU 0 (JAX
 2.12/cuda13 path, env on NFS). Confirms the model runs on Blackwell AND reveals exactly where
 XLA leaves perf on the table on sm_100 — which is exactly what we optimize.
 
 ## Confirmed
-- **JAX/Solaris runs on Blackwell B300.** Loaded clip.pt, vae.pt (245 MB), solaris.pt (6.7 GB);
+- **JAX/KV Craft runs on Blackwell B300.** Loaded clip.pt, vae.pt (245 MB), solaris.pt (6.7 GB);
   loaded eval datasets (structure/rotation/both_look_away/one_looks_away; 257 frames each);
   entered `rollout_func` generation. No fatal error. Only harmless int64->int32 dtype warnings.
 - **The long silence is COMPILE, not a hang:** GPU0 util 0% while 206 GB allocated (JAX preallocs
