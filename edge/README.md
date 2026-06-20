@@ -10,7 +10,8 @@ It is intended for the split-serving setup where:
 
 ```text
 server: Solaris latent generation
-client: VAE latent -> RGB decode + display upscale
+laptop bridge: action upload + latent receive
+client decoder: VAE latent -> RGB decode + display upscale
 ```
 
 The package currently includes:
@@ -35,4 +36,23 @@ Build on macOS:
 cd edge/solaris-vae-metal-decoder
 swift build -c release
 ```
+
+## Split-Serving Flow
+
+Run the decoder on the laptop:
+
+```bash
+cd edge/solaris-vae-metal-decoder
+.build/release/solaris-vae-metal --weights /path/to/solaris-vae-decoder-f16 \
+  --udp-port 7777 --latent-height 28 --latent-width 50
+```
+
+Run the laptop bridge in another terminal:
+
+```bash
+oasis-forge laptop-bridge --server-host <central-host> --player-id 0
+```
+
+The bridge sends actions to the central server and forwards received raw latent payloads to the
+local decoder. Local input capture can feed the bridge with JSON datagrams on `127.0.0.1:7790`.
 
