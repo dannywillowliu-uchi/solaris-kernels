@@ -124,16 +124,19 @@ the cuDNN-9.23 Blackwell-conv fix are the strongest beats.
 
 ---
 
-## 8. Frames-out solution: decode-small + upscale (validated ~30 fps)
+## 8. Frames-out lever: decode-small + upscale (right idea; needs the right resolution)
 
-The decisive VAE lever (validated by William): **decode at lower resolution, then upscale.**
-- VAE conv cost ∝ resolution²; the full-res (360×640) upsample stages are ~all the FLOPs.
-- Decode at half/quarter res → ~4–16× cheaper VAE → **~30 fps frames-out** (William).
-- Upscale to full res with bilinear (free) or a light learned upsampler (quality).
-- **Safe shrink:** softens per-frame detail only; the world-model state is the latent (untouched),
-  so nothing compounds in the autoregressive rollout.
-- **Composes** with everything: distilled small decoder *outputting low-res* + light upscaler is the
-  cheapest; cuDNN-9.23 still applies underneath.
+The promising VAE lever: **decode at lower resolution, then upscale.** VAE conv cost ∝ resolution²,
+so the full-res (360×640) upsample stages are ~all the FLOPs; decoding smaller skips them.
 
-**Full frames-out picture:** bottleneck = VAE → **decode-small+upscale gets ~30 fps** (the win);
-distillation (~2–5×) and cuDNN-9.23 (2.11×, done) stack on top. DiT/server side is already real-time.
+**Honest status — measured, not just projected:**
+- **William reports ~30 fps** with aggressive res reduction (his decode-small + upscale path).
+- **Our first implementation (½-res latent-downscale + bilinear) regressed: 3.52 fps vs 4.14 full-res.**
+  Half-res wasn't aggressive enough and/or latent-downscale is the wrong method — decoder-stage
+  *truncation* at ¼-res is the likely fix. This is an open item, not a banked win.
+- **Safe shrink regardless:** it only softens per-frame detail; the world-model state is the latent
+  (untouched), so nothing compounds in the autoregressive rollout.
+
+**Full frames-out picture (honest):** bottleneck = VAE. Banked: cuDNN-9.23 (2.11×). In progress:
+distilled lighter decoder (training converges; speedup TBD) and decode-small+upscale (William ~30 fps;
+our ½-res attempt regressed, ¼-res/truncation pending). DiT/server side is already real-time (25.7 fps).
