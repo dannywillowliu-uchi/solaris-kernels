@@ -6,6 +6,14 @@ We profile the model's hot path on a B300, optimize the GPU kernels (JAX/XLA), a
 gains over time into a chart. **Scope = the kernels + the serving VAE**; collaborators own the
 interactive harness, netcode, and systems design.
 
+## Vision
+
+A realtime **multiplayer** diffusion world model where **each user gets their own GPU cluster** —
+served on Blackwell, streaming to many players at once. That makes the hot kernels inherently
+multiplayer: **joint multiplayer self-attention** (causal block mask, `block_size = spatial × num_players`,
+1760 tokens/frame at 2 players), **per-player FFN/attention**, and **cross-player KV sharing**. The
+2-player path is the current baseline; the architecture generalizes to more players per node.
+
 ## Headline results
 
 | metric | result |
